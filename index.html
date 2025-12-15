@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <title>案件摘要回報</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f172a;
+      --panel2:#111b33;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --line:#22304e;
+      --brand:#2563eb;
+      --ok:#16a34a;
+      --danger:#ef4444;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: radial-gradient(900px 600px at 10% 0%, #162040 0%, rgba(11,18,32,0) 60%),
+                  radial-gradient(900px 600px at 90% 10%, #111f43 0%, rgba(11,18,32,0) 65%),
+                  var(--bg);
+      color:var(--text);
+      padding: 18px 14px 28px;
+    }
+    header{
+      max-width: 1040px;
+      margin: 0 auto 14px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .title{display:flex; flex-direction:column; gap:4px;}
+    .title h1{margin:0; font-size:18px; letter-spacing:.5px}
+    .sub{color:var(--muted); font-size:12px}
+    .pill{
+      display:flex; align-items:center; gap:8px;
+      padding:10px 12px; border:1px solid var(--line);
+      background: rgba(17,24,39,.55);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .wrap{
+      max-width:1040px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 920px){ .wrap{grid-template-columns:1fr} }
+    .card{
+      background: linear-gradient(180deg, rgba(15,23,42,.85), rgba(15,23,42,.60));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0;
+      font-size:14px;
+      color:#dbeafe;
+      padding: 12px 14px;
+      border-bottom:1px solid rgba(34,48,78,.7);
+      background: rgba(17,27,51,.35);
+    }
+    .card .content{padding: 12px 14px 14px}
+    label{display:block; font-size:12px; color:var(--muted); margin: 10px 0 6px}
+    input[type="text"], textarea, select{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(34,48,78,.9);
+      background: rgba(11,18,32,.55);
+      color: var(--text);
+      outline: none;
+    }
+
+    .dtPicker{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(34,48,78,.9);
+      background: rgba(11,18,32,.55);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      color-scheme: dark;
+    }
+    .dtPicker::-webkit-calendar-picker-indicator{
+      filter: invert(1);
+      opacity: .9;
+      cursor: pointer;
+    }
+    textarea{min-height: 92px; resize: vertical; line-height:1.45}
+    input::placeholder, textarea::placeholder{color: rgba(156,163,175,.7)}
+    .row{display:flex; gap:10px; align-items:center}
+    .row > *{flex:1}
+    .row .auto{flex:0 0 auto}
+    .small{font-size:12px;color:var(--muted); margin-top:6px}
+    .help{
+      padding:10px 12px;
+      border:1px dashed rgba(34,48,78,.9);
+      border-radius: 14px;
+      color: var(--muted);
+      background: rgba(11,18,32,.35);
+      font-size:12px;
+      line-height:1.55;
+      margin-top:10px;
+    }
+    .btnbar{display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px}
+    button{
+      border:0;
+      border-radius: 14px;
+      padding: 10px 12px;
+      cursor:pointer;
+      background: rgba(37,99,235,.95);
+      color:white;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(37,99,235,.25);
+    }
+    button.secondary{
+      background: rgba(148,163,184,.12);
+      border: 1px solid rgba(34,48,78,.95);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: none;
+    }
+    button.ghost{
+      background: transparent;
+      border:1px solid rgba(34,48,78,.95);
+      color: var(--text);
+      box-shadow:none;
+    }
+    button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+    .iconBtn{
+      width: 44px;
+      height: 44px;
+      padding:0;
+      border-radius: 14px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .iconBtn svg{width:20px;height:20px;opacity:.95}
+    .segHead{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-top: 8px;
+      gap:10px;
+    }
+    .segHead .segTitle{font-size:12px; color:var(--muted);}
+    .segments{display:flex; flex-direction:column; gap:10px}
+    .seg{
+      border: 1px solid rgba(34,48,78,.95);
+      border-radius: 14px;
+      padding: 10px 10px 12px;
+      background: rgba(11,18,32,.35);
+    }
+    .segTop{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      margin-bottom: 8px;
+      color: #dbeafe;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .segTop .miniBtn{
+      padding: 6px 10px;
+      border-radius: 12px;
+      font-weight: 700;
+      background: rgba(148,163,184,.12);
+      border: 1px solid rgba(34,48,78,.95);
+      color: var(--text);
+      box-shadow:none;
+    }
+    .out{
+      width:100%;
+      min-height: 380px;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      line-height: 1.6;
+    }
+    /* dialog */
+    dialog{
+      border:1px solid rgba(34,48,78,.95);
+      border-radius: 18px;
+      background: rgba(15,23,42,.98);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      width: min(520px, calc(100vw - 28px));
+      padding: 0;
+    }
+    dialog::backdrop{
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+    }
+    .dlgHead{
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(34,48,78,.7);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .dlgHead strong{font-size:13px}
+    .dlgBody{padding: 12px 14px 14px}
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 420px){ .grid{grid-template-columns:1fr} }
+    .badge{display:inline-flex; align-items:center; gap:8px; font-size: 12px; color: var(--muted);}
+    .dot{width:8px; height:8px; border-radius:999px; background: var(--danger);}
+    .dot.ok{background: var(--ok)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <h1>案件摘要回報</h1>
+      <div class="sub">離線可用 / 一鍵產生群組回報格式</div>
+    </div>
+    <div class="pill">
+      <span class="badge"><span id="pwaDot" class="dot"></span><span id="pwaText">PWA：偵測中</span></span>
+      <span style="opacity:.5">｜</span>
+      <span id="nowText"></span>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="card">
+      <h2>欄位填寫</h2>
+      <div class="content">
+        <label>案由</label>
+        <div class="row">
+          <select id="caseType">
+            <option value="受理詐欺案">受理詐欺案</option>
+            <option value="受理竊盜案">受理竊盜案</option>
+            <option value="偵破竊盜案">偵破竊盜案</option>
+            <option value="查獲__現行犯案">查獲00現行犯案</option>
+            <option value="偵破詐欺案">偵破詐欺案</option>
+            <option value="打架案">打架案</option>
+            <option value="糾紛案">糾紛案</option>
+            <option value="__custom">自填</option>
+          </select>
+          <div class="auto" id="caseExtraWrap" style="display:none; min-width: 220px;">
+            <input id="caseExtra" type="text" placeholder="請輸入「00」內容" />
+          </div>
+        </div>
+        <div class="small">※ 選「查獲00現行犯案」或「自填」時，右側可填入內容。</div>
+
+        <div class="row" style="margin-top: 6px;">
+          <div>
+            <label>時間標題</label>
+            <select id="timeTitle">
+              <option value="發生(現)時間">發生(現)時間</option>
+              <option value="查獲時間">查獲時間</option>
+            </select>
+          </div>
+          <div>
+            <label>地點標題</label>
+            <select id="locTitle">
+              <option value="發生(現)地點">發生(現)地點</option>
+              <option value="查獲地點">查獲地點</option>
+            </select>
+          </div>
+        </div>
+
+        <label id="timeLabel">發生(現)時間</label>
+<div class="row">
+  <input id="timePicker" type="datetime-local" class="dtPicker" />
+</div>
+<div class="small">已選：<span id="timeRocPreview"></span>（輸出為民國年：114年01月01日01時01分）</div>
+
+        <label id="locLabel">發生(現)地點</label>
+        <input id="location" type="text" placeholder="例：高雄市大社區明園巷37-1號" />
+
+        <div class="row" style="margin-top: 6px;">
+          <div>
+            <label>嫌疑人</label>
+            <input id="suspect" type="text" placeholder="若無不用填寫" />
+          </div>
+          <div class="auto" style="align-self:flex-end; padding-bottom: 2px;">
+            <label style="margin:0 0 6px; color:transparent">.</label>
+            <div class="row" style="gap:8px; align-items:center">
+              <input id="suspectEnable" type="checkbox" checked style="width:18px;height:18px" />
+              <span style="font-size:12px;color:var(--muted)">輸出此欄位</span>
+            </div>
+          </div>
+        </div>
+        <div class="small">※ 嫌疑人留白或取消勾選，將自動不輸出並重新編號。</div>
+
+        <div class="segHead">
+          <div class="segTitle">案情摘要（分段）</div>
+          <button id="addSumSeg" type="button" class="secondary">新增段落</button>
+        </div>
+        <div id="sumSegments" class="segments"></div>
+
+        <div class="segHead">
+          <div class="segTitle">後續處理（分段）</div>
+          <button id="addNextSeg" type="button" class="secondary">新增段落</button>
+        </div>
+        <div id="nextSegments" class="segments"></div>
+
+        <div class="btnbar">
+          <button id="genBtn" type="button">產生敘述</button>
+          <button id="copyBtn" type="button" class="ghost">複製到剪貼簿</button>
+          <button id="clearBtn" type="button" class="secondary">清空</button>
+        </div>
+
+        <div class="help">
+          ※ 案情摘要 / 後續處理預設只有（ㄧ），按「新增段落」可加到（ㄧ）（二）（三）。<br>
+          ※ 嫌疑人留白時，會自動略過該欄並重新編號（案情摘要會變成三、後續處理變成四）。
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>輸出結果</h2>
+      <div class="content">
+        <textarea id="output" class="out" readonly placeholder="按「產生敘述」後，這裡會出現可直接貼到群組的文字。"></textarea>
+      </div>
+    </section>
+  </div>
+  <script>
+    const $ = (id)=>document.getElementById(id);
+    const pad2 = (n)=> String(n).padStart(2,"0");
+    const CN = ["","一","二","三","四","五","六","七","八","九","十"];
+    const SUB = ["（一）","（二）","（三）"];
+
+    function ensureSentenceEnd(s){
+      const t = (s||"").trim();
+      if(!t) return "";
+      const last = t.slice(-1);
+      const punct = "。！？；：…）)】]」』";
+      if (punct.includes(last)) return t;
+      return t + "。";
+    }
+
+    function toRocParts(date){
+      const y = date.getFullYear() - 1911;
+      const m = date.getMonth() + 1;
+      const d = date.getDate();
+      const hh = date.getHours();
+      const mm = date.getMinutes();
+      return {y,m,d,hh,mm};
+    }
+    function toRocString(date){
+      const p = toRocParts(date);
+      return `${p.y}年${pad2(p.m)}月${pad2(p.d)}日${pad2(p.hh)}時${pad2(p.mm)}分`;
+    }
+    function toNativeValue(d){
+  const y = d.getFullYear();
+  const m = pad2(d.getMonth()+1);
+  const dd = pad2(d.getDate());
+  const hh = pad2(d.getHours());
+  const mm = pad2(d.getMinutes());
+  return `${y}-${m}-${dd}T${hh}:${mm}`;
+}
+function dateFromNative(val){
+  if(!val) return null;
+  const parts = val.split("T");
+  if(parts.length !== 2) return null;
+  const [datePart, timePart] = parts;
+  const [y,m,d] = datePart.split("-").map(Number);
+  const [hh,mm] = timePart.split(":").map(Number);
+  if([y,m,d,hh,mm].some(n=>Number.isNaN(n))) return null;
+  return new Date(y, m-1, d, hh, mm, 0, 0);
+}
+
+let selectedDate = new Date();
+selectedDate.setSeconds(0,0);
+
+function syncTimeUI(){
+  const inp = $("timePicker");
+  if(inp) inp.value = toNativeValue(selectedDate);
+  const pv = $("timeRocPreview");
+  if(pv) pv.textContent = toRocString(selectedDate);
+}
+function setDateNow(){
+  selectedDate = new Date();
+  selectedDate.setSeconds(0,0);
+  syncTimeUI();
+}
+function setDateFromPicker(){
+  const d = dateFromNative($("timePicker").value);
+  if(!d) return;
+  selectedDate = d;
+  selectedDate.setSeconds(0,0);
+  syncTimeUI();
+}
+
+    function createSegment(type, idx, initialValue){
+      const box = document.createElement("div");
+      box.className = "seg";
+      const top = document.createElement("div");
+      top.className = "segTop";
+
+      const label = document.createElement("div");
+      label.textContent = SUB[idx];
+
+      top.appendChild(label);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "miniBtn";
+      remove.textContent = "移除";
+      remove.style.display = idx === 0 ? "none" : "inline-flex";
+      remove.addEventListener("click", ()=>{
+        box.remove();
+        renumberSegments(type);
+      });
+      top.appendChild(remove);
+
+      const ta = document.createElement("textarea");
+      ta.value = initialValue || "";
+      ta.placeholder = "輸入內容…";
+      ta.dataset.segType = type;
+
+      box.appendChild(top);
+      box.appendChild(ta);
+      return box;
+    }
+
+    function renumberSegments(type){
+      const wrap = type==="sum" ? $("sumSegments") : $("nextSegments");
+      const segs = [...wrap.querySelectorAll(".seg")];
+      const onlyOne = segs.length === 1;
+      segs.forEach((seg, i)=>{
+        const labelDiv = seg.querySelector(".segTop > div");
+        labelDiv.textContent = onlyOne ? "" : (SUB[i] || `（${i+1}）`);
+        labelDiv.style.visibility = onlyOne ? "hidden" : "visible";
+        const rm = seg.querySelector(".segTop button");
+        rm.style.display = (i===0) ? "none" : "inline-flex";
+      });
+      if(type==="sum") $("addSumSeg").disabled = segs.length >= 3;
+      if(type==="next") $("addNextSeg").disabled = segs.length >= 3;
+    }
+
+    function addSegment(type){
+      const wrap = type==="sum" ? $("sumSegments") : $("nextSegments");
+      const count = wrap.querySelectorAll(".seg").length;
+      if(count >= 3) return;
+      const initial = (type==="next" && count===0) ? "本案依規定受理開案，案號：" : "";
+      wrap.appendChild(createSegment(type, count, initial));
+      renumberSegments(type);
+    }
+
+    function getSegmentsText(type){
+      const wrap = type==="sum" ? $("sumSegments") : $("nextSegments");
+      const tas = [...wrap.querySelectorAll("textarea")];
+      return tas.map(t=>t.value.trim()).filter(Boolean);
+    }
+
+    function refreshCaseExtra(){
+      const v = $("caseType").value;
+      const wrap = $("caseExtraWrap");
+      const input = $("caseExtra");
+      if(v === "查獲__現行犯案"){
+        wrap.style.display = "block";
+        input.placeholder = "請輸入「00」（例：竊盜）";
+      }else if(v === "__custom"){
+        wrap.style.display = "block";
+        input.placeholder = "請輸入案由（例：受理毒品案）";
+      }else{
+        wrap.style.display = "none";
+        input.value = "";
+      }
+    }
+    function getCaseTitle(){
+      const v = $("caseType").value;
+      const extra = $("caseExtra").value.trim();
+      if(v === "查獲__現行犯案"){
+        return extra ? `查獲${extra}現行犯案` : "查獲現行犯案";
+      }
+      if(v === "__custom"){
+        return extra || "（請填案由）";
+      }
+      return v;
+    }
+
+    function genOutput(){
+      const timeTitle = $("timeTitle").value.trim();
+      const locTitle = $("locTitle").value.trim();
+      $("timeLabel").textContent = timeTitle;
+      $("locLabel").textContent = locTitle;
+
+      const caseTitle = getCaseTitle();
+      const timeStr = toRocString(selectedDate);
+      const loc = $("location").value.trim();
+
+      const suspectEnable = $("suspectEnable").checked;
+      const suspect = $("suspect").value.trim();
+      const hasSuspect = suspectEnable && !!suspect;
+
+      const sumSegs = getSegmentsText("sum");
+      const nextSegs = getSegmentsText("next");
+
+      const sections = [];
+      sections.push({title: timeTitle, body: ensureSentenceEnd(timeStr).replace(/。+$/,"。")});
+      sections.push({title: locTitle, body: ensureSentenceEnd(loc)});
+      if(hasSuspect) sections.push({title: "嫌疑人", body: ensureSentenceEnd(suspect)});
+
+      const sumLines = (sumSegs.length ? sumSegs : [""]).filter(Boolean);
+      const sumBodyLines = sumSegs.length
+        ? (sumSegs.length === 1
+            ? [ensureSentenceEnd(sumSegs[0])]
+            : sumSegs.map((t,i)=>`${SUB[i]}${ensureSentenceEnd(t)}`))
+        : ["（未填）"];
+      sections.push({title: "案情摘要", bodyLines: sumBodyLines});
+
+      const nextBodyLines = nextSegs.length
+        ? (nextSegs.length === 1
+            ? [ensureSentenceEnd(nextSegs[0])]
+            : nextSegs.map((t,i)=>`${SUB[i]}${ensureSentenceEnd(t)}`))
+        : ["本案依規定受理開案，案號："];
+      sections.push({title: "後續處理", bodyLines: nextBodyLines});
+
+      let out = "";
+      out += "大社所報告\n";
+      out += `${caseTitle}\n\n`;
+
+      sections.forEach((sec, idx)=>{
+        const n = idx + 1;
+        const nCn = CN[n] || String(n);
+        if(sec.bodyLines){
+          out += `${nCn}、${sec.title}：\n`;
+          out += sec.bodyLines.join("\n") + "\n\n";
+        }else{
+          out += `${nCn}、${sec.title}：${sec.body}\n\n`;
+        }
+      });
+
+      $("output").value = out.trimEnd();
+    }
+
+    async function copyOutput(){
+      if(!$("output").value.trim()) genOutput();
+      try{
+        await navigator.clipboard.writeText($("output").value);
+        $("copyBtn").textContent = "已複製";
+        setTimeout(()=> $("copyBtn").textContent = "複製到剪貼簿", 900);
+      }catch(e){
+        alert("複製失敗：瀏覽器可能未授權剪貼簿。你仍可手動全選複製。");
+      }
+    }
+
+    function clearAll(){
+      $("caseType").value = "受理詐欺案";
+      $("caseExtra").value = "";
+      refreshCaseExtra();
+
+      $("timeTitle").value = "發生(現)時間";
+      $("locTitle").value = "發生(現)地點";
+      $("location").value = "";
+
+      $("suspect").value = "";
+      $("suspectEnable").checked = true;
+
+      setDateNow();
+
+      $("sumSegments").innerHTML = "";
+      $("nextSegments").innerHTML = "";
+      addSegment("sum");   // (一)
+      addSegment("next");  // (一) with default text
+
+      $("output").value = "";
+      $("timeLabel").textContent = $("timeTitle").value;
+      $("locLabel").textContent = $("locTitle").value;
+    }
+
+    function setPwaStatus(ok){
+      const dot = $("pwaDot");
+      const text = $("pwaText");
+      if(ok){
+        dot.classList.add("ok");
+        text.textContent = "PWA：已啟用";
+      }else{
+        dot.classList.remove("ok");
+        text.textContent = "PWA：未啟用";
+      }
+    }
+
+    function updateNowText(){
+      const d = new Date();
+      const p = toRocParts(d);
+      $("nowText").textContent = `${p.y}年${pad2(p.m)}月${pad2(p.d)}日`;
+    }
+
+    (function init(){
+      // 時間：使用原生日曆/時間選擇器（datetime-local），輸出時轉民國年
+      syncTimeUI();
+      $("timePicker").addEventListener("change", setDateFromPicker);
+      $("timePicker").addEventListener("input", setDateFromPicker);
+
+      $("caseType").addEventListener("change", refreshCaseExtra);
+      $("timeTitle").addEventListener("change", ()=> $("timeLabel").textContent = $("timeTitle").value);
+      $("locTitle").addEventListener("change", ()=> $("locLabel").textContent = $("locTitle").value);
+
+      $("addSumSeg").addEventListener("click", ()=> addSegment("sum"));
+      $("addNextSeg").addEventListener("click", ()=> addSegment("next"));
+
+      $("genBtn").addEventListener("click", genOutput);
+      $("copyBtn").addEventListener("click", copyOutput);
+      $("clearBtn").addEventListener("click", clearAll);
+
+      clearAll();
+      updateNowText();
+
+      if("serviceWorker" in navigator){
+        navigator.serviceWorker.register("./sw.js").then(()=> setPwaStatus(true)).catch(()=> setPwaStatus(false));
+      }else{
+        setPwaStatus(false);
+      }
+      window.addEventListener("appinstalled", ()=> setPwaStatus(true));
+    })();
+  </script>
+</body>
+</html>
