@@ -218,7 +218,7 @@
       <!-- 一般案件：後續處理 -->
       <div id="followSection">
         <div class="sectionTitle">
-          <h2>後續處理</h2>
+          <h2>後續處理(可留白不輸出)</h2>
           <div class="row" style="justify-content:flex-end;">
             <label class="pill tiny" style="margin:0;">
               <input id="folUseSub" type="checkbox" />
@@ -245,8 +245,8 @@
           <div>
             <label>交通狀況（選項）</label>
             <select id="fireTraffic">
-              <option value="現場交通順暢，無阻塞情事。">現場交通順暢，無阻塞情事。</option>
-              <option value="現場由本所員警指揮交通。">現場由本所員警指揮交通。</option>
+              <option value="現場交通順暢，無阻塞情事">現場交通順暢，無阻塞情事</option>
+              <option value="現場由本所員警指揮交通">現場由本所員警指揮交通</option>
             </select>
           </div>
 
@@ -561,9 +561,8 @@
 
     function sectionNum(n){ return `${cnNums[n] || n}、`; }
     function fireSectionNum(n){ return `${fireNums[n-1] || n}、`; }
-    function ensureFullStop(s){ return s && !s.endsWith("。") ? (s + "。") : s; }
-
-    function getFireReportSuffix(){
+    function ensureFullStop(s){ return s; }
+function getFireReportSuffix(){
       const parts = [];
       if(document.getElementById("fireTypeInit").checked) parts.push("初報");
       if(document.getElementById("fireTypeFollow").checked) parts.push("續報");
@@ -592,10 +591,10 @@
       let n = 1;
 
       const timeHead = timeAsSeized.checked ? "查獲時間" : "發生(現)時間";
-      lines.push(`${sectionNum(n)}${timeHead}： ${dt}${dt ? "。" : ""}`); n++;
+      lines.push(`${sectionNum(n)}${timeHead}： ${dt}`); n++;
 
       const locHead = locAsSeized.checked ? "查獲地點" : "發生(現)地點";
-      lines.push(`${sectionNum(n)}${locHead}： ${loc}${loc ? "。" : ""}`); n++;
+      lines.push(`${sectionNum(n)}${locHead}： ${loc}`); n++;
 
       if(suspect){
         lines.push(`${sectionNum(n)}嫌疑人： ${suspect}`); n++;
@@ -640,7 +639,7 @@
       }
 
       if(seizedBy){
-        lines.push(`${sectionNum(n)}查獲人員： ${seizedBy}。`);
+        lines.push(`${sectionNum(n)}查獲人員： ${seizedBy}`);
       }
 
       return lines.join("\n").trim() + "\n";
@@ -754,7 +753,7 @@
       document.getElementById("fireTypeInit").checked = true;
       document.getElementById("fireTypeFollow").checked = false;
       document.getElementById("fireTypeFinal").checked = false;
-      document.getElementById("fireTraffic").value = "現場交通順暢，無阻塞情事。";
+      document.getElementById("fireTraffic").value = "現場交通順暢，無阻塞情事";
       document.getElementById("fireMedia").value = "none";
       document.getElementById("fireMediaDetail").value = "";
       document.getElementById("fireDisposition").value = "現場協助交管";

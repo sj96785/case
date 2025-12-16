@@ -1,4 +1,4 @@
-const CACHE_NAME = "case-report-pwa-v7";
+const CACHE_NAME = "case-report-pwa-v8";
 const ASSETS = [
   "./",
   "./index.html",
