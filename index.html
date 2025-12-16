@@ -205,11 +205,7 @@
       <div class="sectionTitle" id="sumTitle">
         <h2 id="sumTitleText">案情摘要</h2>
         <div class="row" style="justify-content:flex-end;">
-          <label class="pill tiny" style="margin:0;">
-            <input id="sumUseSub" type="checkbox" />
-            <span>使用（ㄧ）（二）（三）分段</span>
-          </label>
-          <button id="sumAdd" class="success" type="button">新增段落</button>
+<button id="sumAdd" class="success" type="button">新增段落</button>
         </div>
       </div>
 
@@ -220,11 +216,7 @@
         <div class="sectionTitle">
           <h2>後續處理(可留白不輸出)</h2>
           <div class="row" style="justify-content:flex-end;">
-            <label class="pill tiny" style="margin:0;">
-              <input id="folUseSub" type="checkbox" />
-              <span>使用（ㄧ）（二）（三）分段</span>
-            </label>
-            <button id="folPrefill" class="primary" type="button">帶入預設文字</button>
+<button id="folPrefill" class="primary" type="button">帶入預設文字</button>
             <button id="folAdd" class="success" type="button">新增段落</button>
           </div>
         </div>
@@ -577,10 +569,6 @@ function getFireReportSuffix(){
       const loc = (document.getElementById("locInput").value || "").trim();
       const suspect = (document.getElementById("suspectInput").value || "").trim();
       const seizedBy = (document.getElementById("seizedByInput").value || "").trim();
-
-      const sumUseSub = document.getElementById("sumUseSub").checked;
-      const folUseSub = document.getElementById("folUseSub").checked;
-
       const sumSegs = sumMgr.getValues();
       const folSegs = folMgr.getValues();
 
@@ -609,13 +597,8 @@ function getFireReportSuffix(){
         lines.push(sumHead);
         sumSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${s}`));
       }else{
-        // 只有一段時：依「是否用段落」決定格式
-        if(sumUseSub){
-          lines.push(sumHead);
-          lines.push(`${subLabel(1)}${sumSegs[0]}`);
-        }else{
-          lines.push(`${sumHead} ${sumSegs[0]}`);
-        }
+        // 只有一段時：直接接在「：」後面（不加（ㄧ））
+        lines.push(`${sumHead} ${sumSegs[0]}`);
       }
       n++;
 
@@ -627,13 +610,8 @@ function getFireReportSuffix(){
           lines.push(folHead);
           folSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${ensureFullStop(s)}`));
         }else{
-          // 只有一段時：依「是否用段落」決定格式
-          if(folUseSub){
-            lines.push(folHead);
-            lines.push(`${subLabel(1)}${ensureFullStop(folSegs[0])}`);
-          }else{
-            lines.push(`${folHead} ${folSegs[0]}`.trimEnd());
-          }
+          // 只有一段時：直接接在「：」後面（不加（ㄧ））
+          lines.push(`${folHead} ${folSegs[0]}`.trimEnd());
         }
         n++;
       }
@@ -649,8 +627,6 @@ function getFireReportSuffix(){
       const dt = toROCDatetime(document.getElementById("timeInput").value);
       const loc = (document.getElementById("locInput").value || "").trim();
       const officer = (document.getElementById("seizedByInput").value || "").trim();
-
-      const sumUseSub = document.getElementById("sumUseSub").checked;
       const sumSegs = sumMgr.getValues();
 
       const trafficText = document.getElementById("fireTraffic").value;
@@ -689,12 +665,8 @@ function getFireReportSuffix(){
         sumSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${s}`));
         n++;
       }else{
-        if(sumUseSub){
-          lines.push(fireSumHead);
-          lines.push(`${subLabel(1)}${sumSegs[0]}`);
-        }else{
-          lines.push(`${fireSumHead}${sumSegs[0]}`);
-        }
+        // 只有一段時：直接接在「：」後面（不加（ㄧ））
+        lines.push(`${fireSumHead}${sumSegs[0]}`);
         n++;
       }
 // traffic
@@ -745,10 +717,6 @@ function getFireReportSuffix(){
       timeAsSeized.checked = false;
       locAsSeized.checked = false;
       refreshLabels();
-
-      document.getElementById("sumUseSub").checked = false;
-      document.getElementById("folUseSub").checked = false;
-
       // fire defaults
       document.getElementById("fireTypeInit").checked = true;
       document.getElementById("fireTypeFollow").checked = false;
