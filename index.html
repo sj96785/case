@@ -129,12 +129,9 @@
     <header>
       <div>
         <h1>案件摘要回報</h1>
-        <div class="sub">一般案件/火災案（初報/續報/結報）皆可快速產出固定格式文字（可離線/PWA）</div>
+        <div class="sub"></div>
       </div>
-      <div class="pill tiny" title="離線狀態">
-        <span>狀態：</span><span id="netState">檢查中…</span>
-      </div>
-    </header>
+</header>
 
     <div class="card">
       <div class="grid">
@@ -144,14 +141,14 @@
             <option value="受理詐欺案">受理詐欺案</option>
             <option value="受理竊盜案">受理竊盜案</option>
             <option value="偵破竊盜案">偵破竊盜案</option>
-            <option value="查獲__customTail">查獲00現行犯案（00可自填）</option>
+            <option value="查獲__customTail">查獲現行犯(案類自填)</option>
             <option value="偵破詐欺案">偵破詐欺案</option>
             <option value="打架案">打架案</option>
             <option value="糾紛案">糾紛案</option>
             <option value="__fire">火災案（初報/續報/結報）</option>
             <option value="__customFull">自填（可自填整個案由）</option>
           </select>
-          <div class="hintLine" id="caseHint">選「查獲00現行犯案」或「自填」會出現額外輸入框；選「火災案」會切換為火災案格式。</div>
+          <div class="hintLine" id="caseHint"></div>
         </div>
 
         <div id="caseCustomBox" style="display:none;">
@@ -196,13 +193,12 @@
         <div id="suspectBox" style="grid-column:1 / -1;">
           <label>嫌疑人（可留白不輸出）</label>
           <input id="suspectInput" type="text" placeholder="若無不用填寫" />
-          <div class="hintLine">此欄位留白 → 產出文字自動不顯示此段，後面編號會自動遞補。</div>
-        </div>
+</div>
 
         <div style="grid-column:1 / -1;">
           <label id="seizedByLabel">查獲人員（可留白不輸出）</label>
           <input id="seizedByInput" type="text" placeholder="若無不用填寫" />
-          <div class="hintLine" id="seizedByHint">留白則不輸出；若有填寫，會在最後新增一段（五/六…）。</div>
+          <div class="hintLine" id="seizedByHint" style="display:none"></div>
         </div>
       </div>
 
@@ -287,9 +283,9 @@
       </div>
 
       <div class="outWrap">
-        <label>輸出結果（可直接貼到群組）</label>
+        <label>輸出結果</label>
         <textarea id="output" readonly class="mono" placeholder="按「產生敘述」後會出現在這裡"></textarea>
-        <div class="hintLine">輸出規則：只換行、不額外插空白行；火災案會自動切換為「ㄧ、二、三…」格式。</div>
+        <div class="hintLine"></div>
       </div>
     </div>
   </div>
@@ -331,6 +327,7 @@
 
     function netStatus(){
       const el = document.getElementById("netState");
+      if(!el) return;
       const online = navigator.onLine;
       el.textContent = online ? "線上" : "離線";
       el.style.color = online ? "rgba(34,197,94,.95)" : "rgba(239,68,68,.95)";
@@ -496,7 +493,7 @@
       // custom fields (non-fire)
       if(v === "查獲__customTail"){
         caseCustomBox.style.display = "";
-        caseCustomLabel.textContent = "查獲00現行犯案（00自填）";
+        caseCustomLabel.textContent = "案類";
         caseCustom.placeholder = "例如：毒品、通緝犯、失聯移工…";
         caseCustomHint.textContent = "輸出會變成：查獲 + 你輸入的內容 + 現行犯案";
       }else if(v === "__customFull"){
@@ -604,35 +601,43 @@
         lines.push(`${sectionNum(n)}嫌疑人： ${suspect}`); n++;
       }
 
+      
       const sumHead = `${sectionNum(n)}案情摘要：`;
       if(sumSegs.length === 0){
         lines.push(sumHead);
-      }else if(sumUseSub && sumSegs.length >= 2){
+      }else if(sumSegs.length >= 2){
+        // 有新增段落時：強制（ㄧ）（二）並換行
         lines.push(sumHead);
         sumSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${s}`));
-      }else if(sumUseSub && sumSegs.length === 1){
-        lines.push(`${sumHead} ${sumSegs[0]}`);
       }else{
-        if(sumSegs.length === 1){
-          lines.push(`${sumHead} ${sumSegs[0]}`);
-        }else{
+        // 只有一段時：依「是否用段落」決定格式
+        if(sumUseSub){
           lines.push(sumHead);
-          sumSegs.forEach(s => lines.push(s));
+          lines.push(`${subLabel(1)}${sumSegs[0]}`);
+        }else{
+          lines.push(`${sumHead} ${sumSegs[0]}`);
         }
       }
       n++;
 
-      const folHead = `${sectionNum(n)}後續處理：`;
-      if(folSegs.length === 0){
-        lines.push(folHead);
-      }else if(folUseSub){
-        lines.push(folHead);
-        folSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${ensureFullStop(s)}`));
-      }else{
-        lines.push(folHead);
-        folSegs.forEach(s => lines.push(s));
+
+      if(folSegs.length > 0){
+        const folHead = `${sectionNum(n)}後續處理：`;
+        if(folSegs.length >= 2){
+          // 有新增段落時：強制（ㄧ）（二）並換行
+          lines.push(folHead);
+          folSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${ensureFullStop(s)}`));
+        }else{
+          // 只有一段時：依「是否用段落」決定格式
+          if(folUseSub){
+            lines.push(folHead);
+            lines.push(`${subLabel(1)}${ensureFullStop(folSegs[0])}`);
+          }else{
+            lines.push(`${folHead} ${folSegs[0]}`.trimEnd());
+          }
+        }
+        n++;
       }
-      n++;
 
       if(seizedBy){
         lines.push(`${sectionNum(n)}查獲人員： ${seizedBy}。`);
@@ -675,25 +680,25 @@
         lines.push(`${fireSectionNum(n)}現場處理員警：${officer}`); n++;
       }
 
+
       // summary
+      const fireSumHead = `${fireSectionNum(n)}案情摘要：`;
       if(sumSegs.length === 0){
-        lines.push(`${fireSectionNum(n)}案情摘要：`); n++;
-      }else if(sumUseSub && sumSegs.length >= 2){
-        lines.push(`${fireSectionNum(n)}案情摘要：`);
+        lines.push(fireSumHead); n++;
+      }else if(sumSegs.length >= 2){
+        lines.push(fireSumHead);
         sumSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${s}`));
         n++;
       }else{
-        // single line or multi without sublabels -> still keep as single line if only 1 segment
-        if(sumSegs.length === 1){
-          lines.push(`${fireSectionNum(n)}案情摘要：${sumSegs[0]}`); n++;
+        if(sumUseSub){
+          lines.push(fireSumHead);
+          lines.push(`${subLabel(1)}${sumSegs[0]}`);
         }else{
-          lines.push(`${fireSectionNum(n)}案情摘要：`);
-          sumSegs.forEach(s => lines.push(s));
-          n++;
+          lines.push(`${fireSumHead}${sumSegs[0]}`);
         }
+        n++;
       }
-
-      // traffic
+// traffic
       lines.push(`${fireSectionNum(n)}${trafficText}`); n++;
 
       // media
