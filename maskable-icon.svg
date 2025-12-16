@@ -1,9 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#0b1220"/>
-  <circle cx="256" cy="256" r="210" fill="#2563eb" opacity="0.18"/>
-  <circle cx="256" cy="256" r="170" fill="#22c55e" opacity="0.16"/>
-  <path d="M164 188h184c20 0 36 16 36 36v132c0 20-16 36-36 36H164c-20 0-36-16-36-36V224c0-20 16-36 36-36z"
-        fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.18)" stroke-width="6"/>
-  <path d="M184 236h144M184 282h144M184 328h92"
-        stroke="rgba(232,239,255,.88)" stroke-width="16" stroke-linecap="round"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Maskable: full-bleed background; keep foreground within safe zone -->
+  <rect x="0" y="0" width="512" height="512" fill="#000"/>
+  <g transform="translate(0,0)">
+    <g transform="translate(64,64) scale(0.75)">
+      <g fill="#22c55e">
+        <path d="M120 212 H186 L274 150 C286 142 304 150 304 166 V346 C304 362 286 370 274 362 L186 300 H120
+                 C107 300 96 289 96 276 V236 C96 223 107 212 120 212 Z"/>
+        <path d="M186 232 H206 L268 190 V322 L206 280 H186 Z" fill="#000" opacity="0.25"/>
+      </g>
+      <g fill="none" stroke="#22c55e" stroke-width="18" stroke-linecap="round">
+        <path d="M332 210 C362 236 362 276 332 302"/>
+        <path d="M362 178 C412 224 412 288 362 334"/>
+        <path d="M392 146 C462 214 462 298 392 366"/>
+      </g>
+    </g>
+  </g>
 </svg>
