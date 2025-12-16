@@ -48,9 +48,7 @@
       .grid{grid-template-columns:1fr}
     }
     label{display:block; font-size:13px; color:var(--muted); margin:0 0 6px}
-    input, select, textarea, button{
-      font: inherit;
-    }
+    input, select, textarea, button{ font: inherit; }
     input, select, textarea{
       width:100%;
       padding:10px 12px;
@@ -104,7 +102,7 @@
     }
     .segTag{font-size:12px; color:var(--muted)}
     .outWrap{margin-top:14px}
-    .outWrap textarea{min-height: 240px}
+    .outWrap textarea{min-height: 260px}
     .toast{
       position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
       background: rgba(0,0,0,.55);
@@ -120,6 +118,9 @@
     .toast.show{opacity:1; transform: translateX(-50%) translateY(-2px)}
     .hintLine{margin-top:8px; color:var(--muted); font-size:12px}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;}
+    .divider{
+      height:1px; background: var(--line); margin:16px 0;
+    }
   </style>
 </head>
 
@@ -128,7 +129,7 @@
     <header>
       <div>
         <h1>案件摘要回報</h1>
-        <div class="sub">填欄位 → 產生固定格式文字 → 一鍵複製（可離線/PWA）</div>
+        <div class="sub">一般案件/火災案（初報/續報/結報）皆可快速產出固定格式文字（可離線/PWA）</div>
       </div>
       <div class="pill tiny" title="離線狀態">
         <span>狀態：</span><span id="netState">檢查中…</span>
@@ -143,14 +144,14 @@
             <option value="受理詐欺案">受理詐欺案</option>
             <option value="受理竊盜案">受理竊盜案</option>
             <option value="偵破竊盜案">偵破竊盜案</option>
-            <option value="查獲__customTail">查獲00（00可自填）</option>
-            <option value="現行犯案">現行犯案</option>
+            <option value="查獲__customTail">查獲00現行犯案（00可自填）</option>
             <option value="偵破詐欺案">偵破詐欺案</option>
             <option value="打架案">打架案</option>
             <option value="糾紛案">糾紛案</option>
+            <option value="__fire">火災案（初報/續報/結報）</option>
             <option value="__customFull">自填（可自填整個案由）</option>
           </select>
-          <div class="hintLine">選「查獲00」或「自填」會出現額外輸入框。</div>
+          <div class="hintLine" id="caseHint">選「查獲00現行犯案」或「自填」會出現額外輸入框；選「火災案」會切換為火災案格式。</div>
         </div>
 
         <div id="caseCustomBox" style="display:none;">
@@ -159,10 +160,21 @@
           <div class="hintLine" id="caseCustomHint"></div>
         </div>
 
+        <!-- 火災案：初報/續報/結報 -->
+        <div id="fireReportTypeBox" style="display:none;">
+          <label>火災案報告類型（可複選）</label>
+          <div class="row">
+            <label class="pill tiny" style="margin:0;"><input id="fireTypeInit" type="checkbox" checked /><span>初報</span></label>
+            <label class="pill tiny" style="margin:0;"><input id="fireTypeFollow" type="checkbox" /><span>續報</span></label>
+            <label class="pill tiny" style="margin:0;"><input id="fireTypeFinal" type="checkbox" /><span>結報</span></label>
+          </div>
+          <div class="hintLine">輸出會顯示在「大社所報告（…）」括號內，例如（續報）或（初報、結報）。</div>
+        </div>
+
         <div>
           <label id="timeLabel">發生(現)時間</label>
           <input id="timeInput" type="datetime-local" />
-          <div class="row" style="margin-top:8px;">
+          <div class="row" style="margin-top:8px;" id="timeToggleRow">
             <label class="pill tiny" style="margin:0;">
               <input id="timeAsSeized" type="checkbox" />
               <span>標題改為「查獲時間」</span>
@@ -173,7 +185,7 @@
         <div>
           <label id="locLabel">發生(現)地點</label>
           <input id="locInput" type="text" placeholder="例如：高雄市大社區明園巷37-1號" />
-          <div class="row" style="margin-top:8px;">
+          <div class="row" style="margin-top:8px;" id="locToggleRow">
             <label class="pill tiny" style="margin:0;">
               <input id="locAsSeized" type="checkbox" />
               <span>標題改為「查獲地點」</span>
@@ -181,18 +193,24 @@
           </div>
         </div>
 
-        <div style="grid-column:1 / -1;">
+        <div id="suspectBox" style="grid-column:1 / -1;">
           <label>嫌疑人（可留白不輸出）</label>
           <input id="suspectInput" type="text" placeholder="若無不用填寫" />
           <div class="hintLine">此欄位留白 → 產出文字自動不顯示此段，後面編號會自動遞補。</div>
         </div>
+
+        <div style="grid-column:1 / -1;">
+          <label id="seizedByLabel">查獲人員（可留白不輸出）</label>
+          <input id="seizedByInput" type="text" placeholder="若無不用填寫" />
+          <div class="hintLine" id="seizedByHint">留白則不輸出；若有填寫，會在最後新增一段（五/六…）。</div>
+        </div>
       </div>
 
-      <div class="sectionTitle">
-        <h2>案情摘要</h2>
+      <div class="sectionTitle" id="sumTitle">
+        <h2 id="sumTitleText">案情摘要</h2>
         <div class="row" style="justify-content:flex-end;">
           <label class="pill tiny" style="margin:0;">
-            <input id="sumUseSub" type="checkbox" checked />
+            <input id="sumUseSub" type="checkbox" />
             <span>使用（ㄧ）（二）（三）分段</span>
           </label>
           <button id="sumAdd" class="success" type="button">新增段落</button>
@@ -201,19 +219,66 @@
 
       <div id="sumSegments" class="segments"></div>
 
-      <div class="sectionTitle">
-        <h2>後續處理</h2>
-        <div class="row" style="justify-content:flex-end;">
-          <label class="pill tiny" style="margin:0;">
-            <input id="folUseSub" type="checkbox" checked />
-            <span>使用（ㄧ）（二）（三）分段</span>
-          </label>
-          <button id="folPrefill" class="primary" type="button">帶入預設文字</button>
-          <button id="folAdd" class="success" type="button">新增段落</button>
+      <!-- 一般案件：後續處理 -->
+      <div id="followSection">
+        <div class="sectionTitle">
+          <h2>後續處理</h2>
+          <div class="row" style="justify-content:flex-end;">
+            <label class="pill tiny" style="margin:0;">
+              <input id="folUseSub" type="checkbox" />
+              <span>使用（ㄧ）（二）（三）分段</span>
+            </label>
+            <button id="folPrefill" class="primary" type="button">帶入預設文字</button>
+            <button id="folAdd" class="success" type="button">新增段落</button>
+          </div>
         </div>
+
+        <div id="folSegments" class="segments"></div>
       </div>
 
-      <div id="folSegments" class="segments"></div>
+      <!-- 火災案：額外欄位 -->
+      <div id="fireExtras" style="display:none;">
+        <div class="divider"></div>
+
+        <div class="sectionTitle" style="margin-top:0;">
+          <h2>火災案專用欄位</h2>
+          <div class="tiny">以下 3 項會依選項自動輸出為（交通／記者／處置情形）段落。</div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label>交通狀況（選項）</label>
+            <select id="fireTraffic">
+              <option value="現場交通順暢，無阻塞情事。">現場交通順暢，無阻塞情事。</option>
+              <option value="現場由本所員警指揮交通。">現場由本所員警指揮交通。</option>
+            </select>
+          </div>
+
+          <div>
+            <label>記者到場（選項）</label>
+            <select id="fireMedia">
+              <option value="none">現場無記者到場</option>
+              <option value="some">現場有00台記者到場（00自填）</option>
+            </select>
+            <div style="margin-top:10px; display:none;" id="fireMediaDetailBox">
+              <label class="tiny" style="margin:0 0 6px;">00內容（台數或電視台）</label>
+              <input id="fireMediaDetail" type="text" placeholder="例如：3／TVBS、中天、三立" />
+            </div>
+          </div>
+
+          <div style="grid-column:1 / -1;">
+            <label>處置情形（選項）</label>
+            <select id="fireDisposition">
+              <option value="現場協助交管">現場協助交管</option>
+              <option value="custom">自填</option>
+            </select>
+            <div style="margin-top:10px; display:none;" id="fireDispositionDetailBox">
+              <label class="tiny" style="margin:0 0 6px;">自填內容</label>
+              <input id="fireDispositionDetail" type="text" placeholder="例如：現場協助交管、疏導人群、管制出入口…" />
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="btnbar">
         <button id="genBtn" class="primary" type="button">產生敘述</button>
@@ -224,7 +289,7 @@
       <div class="outWrap">
         <label>輸出結果（可直接貼到群組）</label>
         <textarea id="output" readonly class="mono" placeholder="按「產生敘述」後會出現在這裡"></textarea>
-        <div class="hintLine">格式固定跨行分段；有分段時會自動加（ㄧ）（二）（三）。</div>
+        <div class="hintLine">輸出規則：只換行、不額外插空白行；火災案會自動切換為「ㄧ、二、三…」格式。</div>
       </div>
     </div>
   </div>
@@ -232,24 +297,26 @@
   <div id="toast" class="toast">已複製</div>
 
   <script>
-    // ========== PWA: 註冊 Service Worker ==========
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
       });
     }
 
-    // ========== 小工具 ==========
     const pad2 = (n) => String(n).padStart(2, "0");
     const cnNums = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+    const fireNums = ["ㄧ","二","三","四","五","六","七","八","九","十"];
 
     function toROCDatetime(dtLocalValue){
-      // dtLocalValue: "YYYY-MM-DDTHH:MM"
       if(!dtLocalValue) return "";
-      const [d, t] = dtLocalValue.split("T");
-      if(!d || !t) return "";
-      const [Y, M, D] = d.split("-").map(Number);
-      const [h, m] = t.split(":").map(Number);
+      const parts = dtLocalValue.split("T");
+      if(parts.length !== 2) return "";
+      const d = parts[0], t = parts[1];
+      const dParts = d.split("-").map(Number);
+      const tParts = t.split(":").map(Number);
+      if(dParts.length !== 3 || tParts.length < 2) return "";
+      const Y = dParts[0], M = dParts[1], D = dParts[2];
+      const h = tParts[0], m = tParts[1];
       if(!Y || !M || !D || Number.isNaN(h) || Number.isNaN(m)) return "";
       const roc = Y - 1911;
       return `${roc}年${pad2(M)}月${pad2(D)}日${pad2(h)}時${pad2(m)}分`;
@@ -272,11 +339,7 @@
     window.addEventListener("offline", netStatus);
     netStatus();
 
-    // ========== 動態段落（案情摘要 / 後續處理） ==========
-    function subLabel(i){
-      // （一）（二）（三）…（十）
-      return `（${cnNums[i] || i}）`;
-    }
+    function subLabel(i){ return `（${cnNums[i] || i}）`; }
 
     function makeSegmentCard(prefix, i, onRemove){
       const wrap = document.createElement("div");
@@ -319,7 +382,6 @@
 
     function SegmentManager(containerId, prefix){
       const box = document.getElementById(containerId);
-      let count = 0;
 
       const renumber = () => {
         [...box.querySelectorAll(".seg")].forEach((seg, idx) => {
@@ -342,7 +404,6 @@
             delBtn.addEventListener("click", () => remove(n));
           }
         });
-        count = box.querySelectorAll(".seg").length;
       };
 
       const add = () => {
@@ -361,28 +422,21 @@
 
       const getValues = () => {
         const segs = [...box.querySelectorAll(".seg")];
-        return segs.map((seg, idx) => {
-          const ta = seg.querySelector("textarea");
-          return (ta.value || "").trim();
-        }).filter(v => v.length > 0);
+        return segs.map((seg) => (seg.querySelector("textarea").value || "").trim())
+                   .filter(v => v.length > 0);
       };
 
       const setFirstIfEmpty = (text) => {
         const first = box.querySelector("textarea");
-        if(first && !first.value.trim()){
-          first.value = text;
-        }
+        if(first && !first.value.trim()) first.value = text;
       };
 
       const clear = () => {
         box.innerHTML = "";
-        count = 0;
-        add(); // always keep 1
+        add();
       };
 
-      // init with 1 segment
       add();
-
       return { add, remove, getValues, setFirstIfEmpty, clear };
     }
 
@@ -397,20 +451,54 @@
       showToast("已帶入預設文字（可自行修改）");
     });
 
-    // ========== 案由：依選項顯示自填 ==========
+    // ========== 火災案額外欄位互動 ==========
+    const fireMedia = document.getElementById("fireMedia");
+    const fireMediaDetailBox = document.getElementById("fireMediaDetailBox");
+    const fireDisposition = document.getElementById("fireDisposition");
+    const fireDispositionDetailBox = document.getElementById("fireDispositionDetailBox");
+
+    function refreshFireExtras(){
+      fireMediaDetailBox.style.display = (fireMedia.value === "some") ? "" : "none";
+      fireDispositionDetailBox.style.display = (fireDisposition.value === "custom") ? "" : "none";
+    }
+    fireMedia.addEventListener("change", refreshFireExtras);
+    fireDisposition.addEventListener("change", refreshFireExtras);
+    refreshFireExtras();
+
+    // ========== 案由：依選項顯示自填/切換火災案 UI ==========
     const caseType = document.getElementById("caseType");
     const caseCustomBox = document.getElementById("caseCustomBox");
     const caseCustom = document.getElementById("caseCustom");
     const caseCustomLabel = document.getElementById("caseCustomLabel");
     const caseCustomHint = document.getElementById("caseCustomHint");
 
+    const fireReportTypeBox = document.getElementById("fireReportTypeBox");
+    const followSection = document.getElementById("followSection");
+    const fireExtras = document.getElementById("fireExtras");
+
+    const timeLabelEl  = document.getElementById("timeLabel");
+    const locLabelEl   = document.getElementById("locLabel");
+    const timeToggleRow = document.getElementById("timeToggleRow");
+    const locToggleRow = document.getElementById("locToggleRow");
+    const suspectBox = document.getElementById("suspectBox");
+
+    const seizedByLabel = document.getElementById("seizedByLabel");
+    const seizedByHint = document.getElementById("seizedByHint");
+
+    const timeAsSeized = document.getElementById("timeAsSeized");
+    const locAsSeized  = document.getElementById("locAsSeized");
+
+    function isFireMode(){ return caseType.value === "__fire"; }
+
     function refreshCaseCustomUI(){
       const v = caseType.value;
+
+      // custom fields (non-fire)
       if(v === "查獲__customTail"){
         caseCustomBox.style.display = "";
-        caseCustomLabel.textContent = "查獲00（00自填）";
+        caseCustomLabel.textContent = "查獲00現行犯案（00自填）";
         caseCustom.placeholder = "例如：毒品、通緝犯、失聯移工…";
-        caseCustomHint.textContent = "輸出會變成：查獲 + 你輸入的內容";
+        caseCustomHint.textContent = "輸出會變成：查獲 + 你輸入的內容 + 現行犯案";
       }else if(v === "__customFull"){
         caseCustomBox.style.display = "";
         caseCustomLabel.textContent = "案由自填";
@@ -418,19 +506,46 @@
         caseCustomHint.textContent = "輸出會直接使用你輸入的案由";
       }else{
         caseCustomBox.style.display = "none";
-        caseCustom.value = "";
+        if(v !== "__customFull" && v !== "查獲__customTail") caseCustom.value = "";
+      }
+
+      // fire mode switch
+      const fire = (v === "__fire");
+      fireReportTypeBox.style.display = fire ? "" : "none";
+      fireExtras.style.display = fire ? "" : "none";
+      followSection.style.display = fire ? "none" : "";
+
+      // labels & toggles
+      if(fire){
+        timeLabelEl.textContent = "通報時間";
+        locLabelEl.textContent = "發生地點";
+        timeToggleRow.style.display = "none";
+        locToggleRow.style.display = "none";
+        timeAsSeized.checked = false;
+        locAsSeized.checked = false;
+
+        suspectBox.style.display = "none";
+        seizedByLabel.textContent = "現場處理員警（可留白不輸出）";
+        document.getElementById("seizedByInput").placeholder = "例如：巡佐許允騰、警員褚克強";
+        seizedByHint.textContent = "留白則可不輸出；若有填寫，會依序插入「現場處理員警」段落並自動編號。";
+      }else{
+        timeToggleRow.style.display = "";
+        locToggleRow.style.display = "";
+        timeLabelEl.textContent = timeAsSeized.checked ? "查獲時間" : "發生(現)時間";
+        locLabelEl.textContent  = locAsSeized.checked  ? "查獲地點" : "發生(現)地點";
+        suspectBox.style.display = "";
+
+        seizedByLabel.textContent = "查獲人員（可留白不輸出）";
+        document.getElementById("seizedByInput").placeholder = "若無不用填寫";
+        seizedByHint.textContent = "留白則不輸出；若有填寫，會在最後新增一段（五/六…）。";
       }
     }
     caseType.addEventListener("change", refreshCaseCustomUI);
     refreshCaseCustomUI();
 
-    // ========== 標題切換 ==========
-    const timeAsSeized = document.getElementById("timeAsSeized");
-    const locAsSeized  = document.getElementById("locAsSeized");
-    const timeLabelEl  = document.getElementById("timeLabel");
-    const locLabelEl   = document.getElementById("locLabel");
-
+    // title toggles for non-fire
     function refreshLabels(){
+      if(isFireMode()) return; // fire labels fixed
       timeLabelEl.textContent = timeAsSeized.checked ? "查獲時間" : "發生(現)時間";
       locLabelEl.textContent  = locAsSeized.checked  ? "查獲地點" : "發生(現)地點";
     }
@@ -438,28 +553,34 @@
     locAsSeized.addEventListener("change", refreshLabels);
     refreshLabels();
 
-    // ========== 產生文字 ==========
     function getCaseTitle(){
       const v = caseType.value;
       const custom = (caseCustom.value || "").trim();
-      if(v === "查獲__customTail"){
-        return custom ? `查獲${custom}` : "查獲";
-      }
-      if(v === "__customFull"){
-        return custom || "";
-      }
+      if(v === "查獲__customTail") return custom ? `查獲${custom}現行犯案` : "查獲現行犯案";
+      if(v === "__customFull") return custom || "";
+      if(v === "__fire") return "火災案";
       return v;
     }
 
-    function sectionNum(n){
-      return `${cnNums[n] || n}、`;
+    function sectionNum(n){ return `${cnNums[n] || n}、`; }
+    function fireSectionNum(n){ return `${fireNums[n-1] || n}、`; }
+    function ensureFullStop(s){ return s && !s.endsWith("。") ? (s + "。") : s; }
+
+    function getFireReportSuffix(){
+      const parts = [];
+      if(document.getElementById("fireTypeInit").checked) parts.push("初報");
+      if(document.getElementById("fireTypeFollow").checked) parts.push("續報");
+      if(document.getElementById("fireTypeFinal").checked) parts.push("結報");
+      if(parts.length === 0) return "";
+      return "（" + parts.join("、") + "）";
     }
 
-    function buildOutput(){
+    function buildNormalOutput(){
       const title = getCaseTitle().trim();
       const dt = toROCDatetime(document.getElementById("timeInput").value);
       const loc = (document.getElementById("locInput").value || "").trim();
       const suspect = (document.getElementById("suspectInput").value || "").trim();
+      const seizedBy = (document.getElementById("seizedByInput").value || "").trim();
 
       const sumUseSub = document.getElementById("sumUseSub").checked;
       const folUseSub = document.getElementById("folUseSub").checked;
@@ -467,65 +588,125 @@
       const sumSegs = sumMgr.getValues();
       const folSegs = folMgr.getValues();
 
-      const blocks = [];
-
-      // Header
-      blocks.push("大社所報告");
-      blocks.push(title ? title : ""); // empty allowed
+      const lines = [];
+      lines.push("大社所報告");
+      if(title) lines.push(title);
 
       let n = 1;
 
-      // 1 time
       const timeHead = timeAsSeized.checked ? "查獲時間" : "發生(現)時間";
-      blocks.push(`${sectionNum(n)}${timeHead}： ${dt}${dt ? "。" : ""}`); n++;
+      lines.push(`${sectionNum(n)}${timeHead}： ${dt}${dt ? "。" : ""}`); n++;
 
-      // 2 location
       const locHead = locAsSeized.checked ? "查獲地點" : "發生(現)地點";
-      blocks.push(`${sectionNum(n)}${locHead}： ${loc}${loc ? "。" : ""}`); n++;
+      lines.push(`${sectionNum(n)}${locHead}： ${loc}${loc ? "。" : ""}`); n++;
 
-      // 3 suspect (optional)
       if(suspect){
-        blocks.push(`${sectionNum(n)}嫌疑人： ${suspect}`); n++;
+        lines.push(`${sectionNum(n)}嫌疑人： ${suspect}`); n++;
       }
 
-      // summary
       const sumHead = `${sectionNum(n)}案情摘要：`;
       if(sumSegs.length === 0){
-        blocks.push(sumHead);
+        lines.push(sumHead);
       }else if(sumUseSub && sumSegs.length >= 2){
-        const lines = [sumHead];
+        lines.push(sumHead);
         sumSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${s}`));
-        blocks.push(lines.join("\n"));
       }else if(sumUseSub && sumSegs.length === 1){
-        blocks.push(`${sumHead} ${sumSegs[0]}`);
+        lines.push(`${sumHead} ${sumSegs[0]}`);
       }else{
-        // no sublabels: multi lines if multiple segments
         if(sumSegs.length === 1){
-          blocks.push(`${sumHead} ${sumSegs[0]}`);
+          lines.push(`${sumHead} ${sumSegs[0]}`);
         }else{
-          blocks.push([sumHead, ...sumSegs].join("\n"));
+          lines.push(sumHead);
+          sumSegs.forEach(s => lines.push(s));
         }
       }
       n++;
 
-      // follow-up
       const folHead = `${sectionNum(n)}後續處理：`;
       if(folSegs.length === 0){
-        blocks.push(folHead);
+        lines.push(folHead);
       }else if(folUseSub){
-        const lines = [folHead];
-        folSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${s}${s.endsWith("。") ? "" : "。"}`));
-        blocks.push(lines.join("\n"));
+        lines.push(folHead);
+        folSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${ensureFullStop(s)}`));
       }else{
-        if(folSegs.length === 1){
-          blocks.push([folHead, folSegs[0]].join("\n"));
+        lines.push(folHead);
+        folSegs.forEach(s => lines.push(s));
+      }
+      n++;
+
+      if(seizedBy){
+        lines.push(`${sectionNum(n)}查獲人員： ${seizedBy}。`);
+      }
+
+      return lines.join("\n").trim() + "\n";
+    }
+
+    function buildFireOutput(){
+      const dt = toROCDatetime(document.getElementById("timeInput").value);
+      const loc = (document.getElementById("locInput").value || "").trim();
+      const officer = (document.getElementById("seizedByInput").value || "").trim();
+
+      const sumUseSub = document.getElementById("sumUseSub").checked;
+      const sumSegs = sumMgr.getValues();
+
+      const trafficText = document.getElementById("fireTraffic").value;
+
+      const mediaMode = document.getElementById("fireMedia").value;
+      const mediaDetail = (document.getElementById("fireMediaDetail").value || "").trim();
+      let mediaText = "現場無記者到場";
+      if(mediaMode === "some"){
+        mediaText = mediaDetail ? `現場有${mediaDetail}台記者到場` : "現場有00台記者到場";
+      }
+
+      const dispMode = document.getElementById("fireDisposition").value;
+      const dispDetail = (document.getElementById("fireDispositionDetail").value || "").trim();
+      let dispText = "現場協助交管";
+      if(dispMode === "custom") dispText = dispDetail || "";
+
+      const lines = [];
+      lines.push(`大社所報告${getFireReportSuffix()}`);
+
+      let n = 1;
+      lines.push(`${fireSectionNum(n)}案由：火災案`); n++;
+      lines.push(`${fireSectionNum(n)}通報時間：${dt}`); n++;
+      lines.push(`${fireSectionNum(n)}發生地點：${loc}`); n++;
+
+      if(officer){
+        lines.push(`${fireSectionNum(n)}現場處理員警：${officer}`); n++;
+      }
+
+      // summary
+      if(sumSegs.length === 0){
+        lines.push(`${fireSectionNum(n)}案情摘要：`); n++;
+      }else if(sumUseSub && sumSegs.length >= 2){
+        lines.push(`${fireSectionNum(n)}案情摘要：`);
+        sumSegs.forEach((s, i) => lines.push(`${subLabel(i+1)}${s}`));
+        n++;
+      }else{
+        // single line or multi without sublabels -> still keep as single line if only 1 segment
+        if(sumSegs.length === 1){
+          lines.push(`${fireSectionNum(n)}案情摘要：${sumSegs[0]}`); n++;
         }else{
-          blocks.push([folHead, ...folSegs].join("\n"));
+          lines.push(`${fireSectionNum(n)}案情摘要：`);
+          sumSegs.forEach(s => lines.push(s));
+          n++;
         }
       }
 
-      // blocks join with blank lines between each major block (as you want "跨行分段")
-      return blocks.filter(b => b !== null).join("\n\n").trim() + "\n";
+      // traffic
+      lines.push(`${fireSectionNum(n)}${trafficText}`); n++;
+
+      // media
+      lines.push(`${fireSectionNum(n)}${mediaText}`); n++;
+
+      // disposition
+      lines.push(`${fireSectionNum(n)}處置情形：${dispText}`); n++;
+
+      return lines.join("\n").trim() + "\n";
+    }
+
+    function buildOutput(){
+      return isFireMode() ? buildFireOutput() : buildNormalOutput();
     }
 
     document.getElementById("genBtn").addEventListener("click", () => {
@@ -540,7 +721,6 @@
         await navigator.clipboard.writeText(out);
         showToast("已複製到剪貼簿");
       }catch(e){
-        // fallback
         const ta = document.getElementById("output");
         ta.focus(); ta.select();
         document.execCommand("copy");
@@ -550,18 +730,31 @@
 
     document.getElementById("clearBtn").addEventListener("click", () => {
       caseType.value = "受理詐欺案";
+      caseCustom.value = "";
       refreshCaseCustomUI();
 
       document.getElementById("timeInput").value = "";
       document.getElementById("locInput").value = "";
       document.getElementById("suspectInput").value = "";
+      document.getElementById("seizedByInput").value = "";
 
       timeAsSeized.checked = false;
       locAsSeized.checked = false;
       refreshLabels();
 
-      document.getElementById("sumUseSub").checked = true;
-      document.getElementById("folUseSub").checked = true;
+      document.getElementById("sumUseSub").checked = false;
+      document.getElementById("folUseSub").checked = false;
+
+      // fire defaults
+      document.getElementById("fireTypeInit").checked = true;
+      document.getElementById("fireTypeFollow").checked = false;
+      document.getElementById("fireTypeFinal").checked = false;
+      document.getElementById("fireTraffic").value = "現場交通順暢，無阻塞情事。";
+      document.getElementById("fireMedia").value = "none";
+      document.getElementById("fireMediaDetail").value = "";
+      document.getElementById("fireDisposition").value = "現場協助交管";
+      document.getElementById("fireDispositionDetail").value = "";
+      refreshFireExtras();
 
       sumMgr.clear();
       folMgr.clear();

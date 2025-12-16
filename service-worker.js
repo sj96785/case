@@ -1,4 +1,4 @@
-const CACHE_NAME = "case-report-pwa-v1";
+const CACHE_NAME = "case-report-pwa-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -31,7 +31,6 @@ self.addEventListener("fetch", (event) => {
     caches.match(req).then((cached) => {
       if (cached) return cached;
       return fetch(req).then((res) => {
-        // 只快取同源 GET
         try{
           if (req.method === "GET" && new URL(req.url).origin === self.location.origin) {
             const copy = res.clone();
