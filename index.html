@@ -246,7 +246,7 @@
             <label>交通狀況（選項）</label>
             <select id="fireTraffic">
               <option value="現場交通順暢，無阻塞情事">現場交通順暢，無阻塞情事</option>
-              <option value="現場由本所員警指揮交通">現場由本所員警指揮交通</option>
+              <option value="現場實施交通管制">現場實施交通管制</option>
             </select>
           </div>
 
@@ -254,11 +254,11 @@
             <label>記者到場（選項）</label>
             <select id="fireMedia">
               <option value="none">現場無記者到場</option>
-              <option value="some">現場有00台記者到場（00自填）</option>
+              <option value="some">現場有記者到場（電視台自填）</option>
             </select>
             <div style="margin-top:10px; display:none;" id="fireMediaDetailBox">
-              <label class="tiny" style="margin:0 0 6px;">00內容（台數或電視台）</label>
-              <input id="fireMediaDetail" type="text" placeholder="例如：3／TVBS、中天、三立" />
+              <label class="tiny" style="margin:0 0 6px;">電視台名稱</label>
+              <input id="fireMediaDetail" type="text" placeholder="例如：三立、TVBS、中天…" />
             </div>
           </div>
 
@@ -494,12 +494,12 @@
       if(v === "查獲__customTail"){
         caseCustomBox.style.display = "";
         caseCustomLabel.textContent = "案類";
-        caseCustom.placeholder = "例如：毒品、通緝犯、失聯移工…";
+        caseCustom.placeholder = "例如：竊盜、詐欺、其他";
         caseCustomHint.textContent = "輸出會變成：查獲 + 你輸入的內容 + 現行犯案";
       }else if(v === "__customFull"){
         caseCustomBox.style.display = "";
         caseCustomLabel.textContent = "案由自填";
-        caseCustom.placeholder = "例如：受理OO案 / 查獲OO / 其他…";
+        caseCustom.placeholder = "例如：竊盜、詐欺、其他";
         caseCustomHint.textContent = "輸出會直接使用你輸入的案由";
       }else{
         caseCustomBox.style.display = "none";
@@ -659,7 +659,7 @@ function getFireReportSuffix(){
       const mediaDetail = (document.getElementById("fireMediaDetail").value || "").trim();
       let mediaText = "現場無記者到場";
       if(mediaMode === "some"){
-        mediaText = mediaDetail ? `現場有${mediaDetail}台記者到場` : "現場有00台記者到場";
+        mediaText = mediaDetail ? `現場有${mediaDetail}記者到場` : "現場有記者到場";
       }
 
       const dispMode = document.getElementById("fireDisposition").value;
